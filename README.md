@@ -60,6 +60,12 @@ The API now provides 67 method/path operations, including user registration/logi
 
 Database connection status is intentionally exposed only as `ready`/`unavailable`; credentials, hostnames and SQL errors are never returned by the health endpoint. The readiness check uses the same `DATABASE_URL` loaded by the application.
 
+For Vercel deployments, use the Supabase Session Pooler connection string on
+port `5432` rather than the direct `db.<project-ref>.supabase.co:5432` host.
+The direct host may be IPv6-only and therefore unreachable from Vercel
+functions. Configure the pooler URL as the Production `DATABASE_URL` in Vercel
+and redeploy before checking `/health/ready`.
+
 ## Supabase and Google login
 
 The API verifies Supabase-issued access tokens and resolves permissions from active local memberships. Email/password login and registration are available through `/v1/auth/*`. Google login is configured in Supabase Auth and can be initiated by a future web client with `signInWithOAuth({ provider: "google" })`; Google credentials must not be placed in this backend repository.
