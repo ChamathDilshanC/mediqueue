@@ -1,0 +1,16 @@
+name: integration
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e ".[test]"
+        working-directory: backend
+      - run: python configuration/validate.py configuration/defaults.json
+      - run: pytest
+        working-directory: backend

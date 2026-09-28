@@ -1,0 +1,9 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/ChamathDilshanC/mediqueue-backend.git
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/ChamathDilshanC/mediqueue-frontend.git
+[submodule "configuration"]
+	path = configuration
+	url = https://github.com/ChamathDilshanC/mediqueue-configuration.git
