@@ -22,6 +22,7 @@ git clone --recurse-submodules https://github.com/ChamathDilshanC/mediqueue.git
 Set-Location backend
 Copy-Item .env.example .env
 python -m pip install -e '.[test]'
+python -m backend.init_db
 pytest
 python -m uvicorn backend.main:app --reload
 ```
@@ -38,11 +39,14 @@ PostgreSQL is the production database. SQLite is supported for local development
 
 Start the API and open:
 
-- Swagger UI: `http://127.0.0.1:8000/docs`
+- Themed API reference: `http://127.0.0.1:8000/docs`
+- Swagger playground: `http://127.0.0.1:8000/swagger`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 - OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
 
 The generated documentation includes request fields, response models, authentication requirements, role/scope behavior, error responses, idempotency requirements and queue-state side effects.
+
+The API now provides 67 method/path operations, including user registration/login/recovery, hospital/branch onboarding, database-backed memberships, department/room/doctor/schedule management, patients, appointments, visits and queue operations. See [the backend API guide](backend/README.md) for the full resource matrix and rollout requirements. The documentation uses the requested white/lime theme with responsive navigation, live search and request/response examples. Application frontend implementation remains separate.
 
 | Method | Endpoint | Purpose | Authentication |
 | --- | --- | --- | --- |
@@ -58,7 +62,7 @@ Database connection status is intentionally exposed only as `ready`/`unavailable
 
 ## Supabase and Google login
 
-The API verifies Supabase-issued access tokens. Google login is configured in Supabase Auth and initiated by the future web client with `signInWithOAuth({ provider: "google" })`; Google credentials must not be placed in this backend repository.
+The API verifies Supabase-issued access tokens and resolves permissions from active local memberships. Email/password login and registration are available through `/v1/auth/*`. Google login is configured in Supabase Auth and can be initiated by a future web client with `signInWithOAuth({ provider: "google" })`; Google credentials must not be placed in this backend repository.
 
 1. Create a Supabase project.
 2. In **Authentication → Providers → Google**, enable Google and add the Google OAuth client ID/secret.

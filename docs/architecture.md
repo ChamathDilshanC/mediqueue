@@ -5,6 +5,16 @@
 **Product:** Multi-branch healthcare queue and patient-flow platform. Web first, mobile later.
 **Stack:** Next.js/TypeScript; Python/FastAPI services; Supabase PostgreSQL, Auth, Realtime and Storage; SQLAlchemy/Alembic.
 
+### Implemented API slice (2026-09-28)
+
+The current backend deploys identity, scheduling and queue routers together as a modular FastAPI application, with schema ownership retained (`iam`, `scheduling`, `queue`, `notifications`). The independently deployed services below remain the target topology; this slice uses local cross-schema transactions for onboarding and reference validation rather than claiming service isolation already exists.
+
+Implemented entities: hospitals (the existing `iam.tenant`), branches, Supabase-linked user profiles, branch memberships, departments, rooms, doctors, schedules, reference-only patients, visits, appointments and queue tokens. Hospital onboarding creates the first branch and admin membership atomically. JWTs establish identity; active database memberships establish role/branch scope. Public signup never accepts role or tenant metadata. Existing users need memberships provisioned when upgrading from claim-only authorization.
+
+Setup entities have typed, scoped CRUD. Hospitals/branches have onboarding/read/update operations; membership revocation is explicit. Appointment cancellation and immutable visit/audit history preserve records rather than exposing blanket deletion. Patient references are shared within a hospital; other operational resources are branch-scoped. Outbox and idempotency storage remain internal. Schedule overlap and appointment capacity are checked under branch/schedule locks. Queue commands use actor/branch/operation-bound idempotency, row locks, audit and outbox records. The local SQLite adapter persists schema sidecars but is not a concurrency substitute for PostgreSQL.
+
+The API reference at `/docs` is a responsive white/lime portal generated from `/openapi.json`; Swagger remains available at `/swagger`. The frontend submodule is unchanged. Invitations, patient self-service, public TV credentials, visit-stage transfers, realtime fanout delivery and analytics remain the later stages identified below, not exposed as placeholder endpoints in this release.
+
 ## 1. Architectural decisions
 
 - Four Git repositories: `mediqueue` (main), `mediqueue-frontend`, `mediqueue-backend`, `mediqueue-configuration`. Repository display names may be “MediQueue — Main/Frontend/Backend/Configuration”; Git slugs must be distinct.

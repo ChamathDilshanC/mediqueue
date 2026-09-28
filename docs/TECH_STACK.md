@@ -4,6 +4,8 @@
 
 This document defines the initial web-first stack. Mobile uses the same APIs later. Versions are pinned in lockfiles and reviewed before implementation; this document intentionally avoids unverified version numbers.
 
+The current implemented API is a modular FastAPI deployment with identity, scheduling and queue routers. Its `/docs` reference is served as lightweight HTML/CSS/JavaScript and reads the live OpenAPI contract; `/swagger` retains interactive request execution. The Next.js application remains a separate planned frontend. Authentication now includes a Supabase REST facade plus database-backed branch memberships; see the backend README for migrations and authorization rollout requirements.
+
 | Layer | Choice | Purpose |
 | --- | --- | --- |
 | Web | Next.js, React, TypeScript | Admin, reception, doctor, patient, TV and kiosk interfaces |
