@@ -1,80 +1,163 @@
 # MediQueue
 
-Main integration repository for the MediQueue healthcare queue platform.
+> A modular healthcare queue platform for hospitals, branches, staff, and patients.
 
-The implementation is maintained in pinned child repositories:
+[![Backend](https://img.shields.io/badge/API-FastAPI-05998b?logo=fastapi&logoColor=white)](https://mediqueue-backend-eta.vercel.app/)
+[![Database](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com/)
+[![Deployment](https://img.shields.io/badge/Deployment-Vercel-black?logo=vercel&logoColor=white)](https://vercel.com/)
+[![License](https://img.shields.io/badge/license-proprietary-142018)](docs/architecture.md)
 
-- `backend/` - [mediqueue-backend](https://github.com/ChamathDilshanC/mediqueue-backend)
-- `frontend/` - [mediqueue-frontend](https://github.com/ChamathDilshanC/mediqueue-frontend)
-- `configuration/` - [mediqueue-configuration](https://github.com/ChamathDilshanC/mediqueue-configuration)
+MediQueue coordinates patient flow from authentication and hospital setup to
+appointments, visits, queue tokens, and staff-facing operations. The main
+repository is an integration shell; production code is maintained in pinned
+child repositories.
 
-## Structure
+## Platform at a glance
 
-- `backend/` - pinned backend submodule containing FastAPI, migrations, worker and tests.
-- `configuration/` - pinned configuration submodule containing JSON Schema-validated snapshots.
-- `frontend/` - pinned frontend submodule for the Next.js client.
-- `docs/` - architecture, stack and repository rules.
+| Surface | Responsibility | Status |
+| --- | --- | --- |
+| `mediqueue-backend` | FastAPI API, identity, scheduling, queues, migrations, worker | Implemented |
+| `mediqueue-configuration` | JSON Schema-validated release snapshots and public allowlist | Implemented |
+| `mediqueue-frontend` | Next.js client for admin, reception, doctor, kiosk, TV, and patient views | Foundation placeholder |
+| `docs/` | Architecture, technology decisions, and repository rules | Maintained |
 
-## Local development
+## Full request and data flow
+
+```mermaid
+flowchart LR
+    U[Web / Mobile / Kiosk] -->|Supabase sign-in| A[Supabase Auth]
+    U -->|HTTPS + JWT + branch scope| API[Vercel FastAPI API]
+    API --> AUTH[JWT + membership authorization]
+    AUTH --> DB[(Supabase PostgreSQL)]
+    API --> Q[Transactional queue commands]
+    Q --> DB
+    DB --> OUT[Outbox events]
+    OUT --> RT[Realtime Broadcast / notification worker]
+    RT --> U
+    CFG[Configuration submodule] -->|validated immutable snapshot| API
+    API -->|allowlisted public config| U
+```
+
+### Core lifecycle
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Auth as Supabase Auth
+    participant API as FastAPI
+    participant DB as PostgreSQL
+    participant Events as Outbox / Realtime
+
+    User->>Auth: Sign in or register
+    Auth-->>User: Access token
+    User->>API: Create hospital or select branch
+    API->>Auth: Verify JWT
+    API->>DB: Resolve active membership
+    API->>DB: Transactional domain command
+    DB-->>API: Authoritative result
+    API->>Events: Write audit + outbox event
+    API-->>User: Typed response
+    Events-->>User: Sanitized queue update
+```
+
+## Repository layout
+
+```text
+MediQueue/
+├── backend/          # FastAPI submodule: API, migrations, tests, worker
+├── configuration/    # JSON configuration submodule and schema validator
+├── frontend/         # Next.js client submodule
+├── docs/             # Architecture and technology decisions
+├── assets/            # Shared brand assets
+└── .github/           # Integration CI
+```
+
+## Quick start
+
+### Clone the complete project
 
 ```powershell
 git clone --recurse-submodules https://github.com/ChamathDilshanC/mediqueue.git
+Set-Location MediQueue
+```
+
+### Run the backend locally
+
+```powershell
 Set-Location backend
-Copy-Item .env.example .env
 python -m pip install -e '.[test]'
+Copy-Item .env.example .env
 python -m backend.init_db
-pytest
 python -m uvicorn backend.main:app --reload
 ```
 
-Validate the pinned configuration separately from the repository root:
+Open the local documentation:
+
+- API portal: <http://127.0.0.1:8000/docs>
+- Swagger: <http://127.0.0.1:8000/swagger>
+- ReDoc: <http://127.0.0.1:8000/redoc>
+- OpenAPI: <http://127.0.0.1:8000/openapi.json>
+
+### Validate configuration
 
 ```powershell
 python configuration\validate.py configuration\defaults.json
+python configuration\validate.py configuration\development.json
+python configuration\validate.py configuration\staging.json
+python configuration\validate.py configuration\production.json
 ```
 
-PostgreSQL is the production database. SQLite is supported for local development and tests. Run `alembic upgrade head` against the configured PostgreSQL database before deploying the API. Authentication requires a verified Supabase JWT in staging/production; development-header authentication is disabled by default.
+## Public operational endpoints
 
-## API documentation and operational endpoints
+| Endpoint | Purpose |
+| --- | --- |
+| [`/health`](https://mediqueue-backend-eta.vercel.app/health) | Liveness check; no database query |
+| [`/health/ready`](https://mediqueue-backend-eta.vercel.app/health/ready) | PostgreSQL readiness check using `SELECT 1` |
+| [`/status`](https://mediqueue-backend-eta.vercel.app/status) | Public service status |
+| [`/v1/config/public`](https://mediqueue-backend-eta.vercel.app/v1/config/public) | Allowlisted browser-safe configuration |
+| [`/docs`](https://mediqueue-backend-eta.vercel.app/docs) | Branded API documentation portal |
 
-Start the API and open:
+## Technology stack
 
-- Themed API reference: `http://127.0.0.1:8000/docs`
-- Swagger playground: `http://127.0.0.1:8000/swagger`
-- ReDoc: `http://127.0.0.1:8000/redoc`
-- OpenAPI JSON: `http://127.0.0.1:8000/openapi.json`
+| Layer | Technology | Why it is used |
+| --- | --- | --- |
+| API | Python, FastAPI, Pydantic | Typed HTTP contracts and generated OpenAPI |
+| Persistence | Supabase PostgreSQL | Durable multi-tenant source of truth |
+| Data access | SQLAlchemy async + Alembic | Async transactions and controlled migrations |
+| Authentication | Supabase Auth + JWT/JWKS | Managed identity with verifiable tokens |
+| Authorization | Database memberships | Tenant and branch isolation independent of user claims |
+| Queue reliability | PostgreSQL locks + idempotency keys | Safe concurrent check-in and call-next commands |
+| Events | PostgreSQL outbox | Transactionally consistent notifications and realtime updates |
+| Configuration | JSON Schema snapshots | Immutable, validated, allowlisted release settings |
+| Web client | Next.js, React, TypeScript | Planned role-based hospital interfaces |
+| Deployment | Vercel + GitHub submodules | Independently deployable services with pinned integration commits |
+| Quality | pytest, integration tests, GitHub Actions | Regression, isolation, and concurrency coverage |
 
-The generated documentation includes request fields, response models, authentication requirements, role/scope behavior, error responses, idempotency requirements and queue-state side effects.
+## Production database
 
-The API now provides 67 method/path operations, including user registration/login/recovery, hospital/branch onboarding, database-backed memberships, department/room/doctor/schedule management, patients, appointments, visits and queue operations. See [the backend API guide](backend/README.md) for the full resource matrix and rollout requirements. The documentation uses the requested white/lime theme with responsive navigation, live search and request/response examples. Application frontend implementation remains separate.
+For Vercel, use the Supabase **Session Pooler** URL on port `5432`:
 
-| Method | Endpoint | Purpose | Authentication |
-| --- | --- | --- | --- |
-| `GET` | `/health` | API liveness; does not contact the database | Public |
-| `GET` | `/health/ready` | Executes `SELECT 1` against the configured database | Public |
-| `GET` | `/v1/config/public` | Returns only the configuration snapshot's `publicAllowlist` keys | Public |
-| `GET` | `/v1/queues/{queue_id}/snapshot` | Returns token labels/statuses for an authorized branch | Supabase JWT + staff role |
-| `POST` | `/v1/queues/{queue_id}/tokens` | Checks a patient into a queue | Supabase JWT + reception/staff/admin + `Idempotency-Key` |
-| `POST` | `/v1/queues/{queue_id}/call-next` | Calls one waiting token transactionally | Supabase JWT + doctor/staff/admin + `Idempotency-Key` |
-| `POST` | `/v1/tokens/{token_id}/{action}` | Performs `recall`, `skip`, or `complete` | Supabase JWT + authorized role |
+```text
+postgresql://postgres.<project-ref>:PASSWORD@aws-0-<region>.pooler.supabase.com:5432/postgres?sslmode=require
+```
 
-Database connection status is intentionally exposed only as `ready`/`unavailable`; credentials, hostnames and SQL errors are never returned by the health endpoint. The readiness check uses the same `DATABASE_URL` loaded by the application.
+URL-encode password characters such as `@` → `%40`. Do not use the direct
+`db.<project-ref>.supabase.co:5432` host for Vercel unless IPv6 connectivity is
+available. Keep `DATABASE_URL`, service-role keys, JWT secrets, and OAuth
+credentials in Vercel environment variables only.
 
-For Vercel deployments, use the Supabase Session Pooler connection string on
-port `5432` rather than the direct `db.<project-ref>.supabase.co:5432` host.
-The direct host may be IPv6-only and therefore unreachable from Vercel
-functions. Configure the pooler URL as the Production `DATABASE_URL` in Vercel
-and redeploy before checking `/health/ready`.
+## Documentation map
 
-## Supabase and Google login
+- [Architecture](docs/architecture.md)
+- [Technology stack](docs/TECH_STACK.md)
+- [Backend API and operations](backend/README.md)
+- [Frontend foundation](frontend/README.md)
+- [Configuration releases](configuration/README.md)
 
-The API verifies Supabase-issued access tokens and resolves permissions from active local memberships. Email/password login and registration are available through `/v1/auth/*`. Google login is configured in Supabase Auth and can be initiated by a future web client with `signInWithOAuth({ provider: "google" })`; Google credentials must not be placed in this backend repository.
+## Development principles
 
-1. Create a Supabase project.
-2. In **Authentication → Providers → Google**, enable Google and add the Google OAuth client ID/secret.
-3. Add the local and deployed callback URLs shown by Supabase to Google Cloud OAuth credentials.
-4. Copy the Supabase project URL into `SUPABASE_URL` and the public anon key into `SUPABASE_ANON_KEY`.
-5. Configure `SUPABASE_JWKS_URL` (or the project JWT secret where applicable) for backend token verification.
-6. Keep `SUPABASE_SERVICE_ROLE_KEY`, database passwords and OAuth client secrets only in the deployment secret store.
-
-The current `.env` is a local, secret-free SQLite configuration. Replace only the empty Supabase values when the project is available; do not commit secrets.
+- PostgreSQL is authoritative in production; SQLite is local-only.
+- Every scoped mutation validates tenant, branch, membership, and role.
+- Queue mutations are transactional, idempotent, audited, and outbox-backed.
+- Public configuration exposes only values listed by `publicAllowlist`.
+- Secrets never belong in source control, frontend bundles, or logs.
