@@ -12,6 +12,13 @@ appointments, visits, queue tokens, and staff-facing operations. The main
 repository is an integration shell; production code is maintained in pinned
 child repositories.
 
+## Application
+
+| Application | Link |
+| --- | --- |
+| `Frontend` | [Live Frontend](https://mediqueue-frontend-theta.vercel.app/) |
+| `Backend` | [Live Backend](https://mediqueue-backend-eta.vercel.app/docs) |
+
 ## Platform at a glance
 
 | Surface | Responsibility | Status |
