@@ -18,7 +18,7 @@ child repositories.
 | --- | --- | --- |
 | `mediqueue-backend` | FastAPI API, identity, scheduling, queues, migrations, worker | Implemented |
 | `mediqueue-configuration` | JSON Schema-validated release snapshots and public allowlist | Implemented |
-| `mediqueue-frontend` | Next.js client for admin, reception, doctor, kiosk, TV, and patient views | Foundation placeholder |
+| `mediqueue-frontend` | Sinhala/English public website, registration, login, password recovery and account access | Public/auth foundation implemented; role workspaces next |
 | `docs/` | Architecture, technology decisions, and repository rules | Maintained |
 
 ## Full request and data flow
@@ -66,7 +66,7 @@ sequenceDiagram
 MediQueue/
 ├── backend/          # FastAPI submodule: API, migrations, tests, worker
 ├── configuration/    # JSON configuration submodule and schema validator
-├── frontend/         # Next.js client submodule
+├── frontend/         # Next.js public website and authentication submodule
 ├── docs/             # Architecture and technology decisions
 ├── assets/            # Shared brand assets
 └── .github/           # Integration CI
@@ -129,7 +129,7 @@ python configuration\validate.py configuration\production.json
 | Queue reliability | PostgreSQL locks + idempotency keys | Safe concurrent check-in and call-next commands |
 | Events | PostgreSQL outbox | Transactionally consistent notifications and realtime updates |
 | Configuration | JSON Schema snapshots | Immutable, validated, allowlisted release settings |
-| Web client | Next.js, React, TypeScript | Planned role-based hospital interfaces |
+| Web client | Next.js, React, TypeScript | Bilingual public/auth experience; role-based hospital interfaces planned |
 | Deployment | Vercel + GitHub submodules | Independently deployable services with pinned integration commits |
 | Quality | pytest, integration tests, GitHub Actions | Regression, isolation, and concurrency coverage |
 

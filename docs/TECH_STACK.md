@@ -4,7 +4,7 @@
 
 This document defines the initial web-first stack. Mobile uses the same APIs later. Versions are pinned in lockfiles and reviewed before implementation; this document intentionally avoids unverified version numbers.
 
-The current implemented API is a modular FastAPI deployment with identity, scheduling and queue routers. Its `/docs` reference is served as lightweight HTML/CSS/JavaScript and reads the live OpenAPI contract; `/swagger` retains interactive request execution. The Next.js application remains a separate planned frontend. Authentication now includes a Supabase REST facade plus database-backed branch memberships; see the backend README for migrations and authorization rollout requirements.
+The current implemented API is a modular FastAPI deployment with identity, scheduling and queue routers. Its `/docs` reference is served as lightweight HTML/CSS/JavaScript and reads the live OpenAPI contract; `/swagger` retains interactive request execution. The Next.js frontend now implements the Sinhala/English public website and authentication experience. Same-origin route handlers call the backend Supabase REST facade and keep tokens in HttpOnly cookies. Role workspaces remain planned; see the backend README for migrations and authorization rollout requirements.
 
 | Layer | Choice | Purpose |
 | --- | --- | --- |
@@ -19,6 +19,7 @@ The current implemented API is a modular FastAPI deployment with identity, sched
 | Database | Supabase PostgreSQL | Durable source of truth for appointments, visits, queues and audit |
 | Data access | SQLAlchemy + Alembic migrations | Typed queries and controlled schema evolution |
 | Authentication | Supabase Auth | Identity; backend verifies JWT and enforces tenant/branch roles |
+| Web OAuth | Supabase Google provider + server-side PKCE | Google login returns to Next.js and reuses HttpOnly session cookies; backend membership authorization remains authoritative |
 | Realtime | Supabase Realtime Broadcast | Sanitized queue updates to authorized channels |
 | Storage | Supabase Storage | Approved assets and documents, if needed; private by default |
 | Background work | Python worker/job + PostgreSQL outbox | Notifications, retries and asynchronous projections outside request execution |

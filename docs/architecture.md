@@ -13,7 +13,15 @@ Implemented entities: hospitals (the existing `iam.tenant`), branches, Supabase-
 
 Setup entities have typed, scoped CRUD. Hospitals/branches have onboarding/read/update operations; membership revocation is explicit. Appointment cancellation and immutable visit/audit history preserve records rather than exposing blanket deletion. Patient references are shared within a hospital; other operational resources are branch-scoped. Outbox and idempotency storage remain internal. Schedule overlap and appointment capacity are checked under branch/schedule locks. Queue commands use actor/branch/operation-bound idempotency, row locks, audit and outbox records. The local SQLite adapter persists schema sidecars but is not a concurrency substitute for PostgreSQL.
 
-The API reference at `/docs` is a responsive white/lime portal generated from `/openapi.json`; Swagger remains available at `/swagger`. The frontend submodule is unchanged. Invitations, patient self-service, public TV credentials, visit-stage transfers, realtime fanout delivery and analytics remain the later stages identified below, not exposed as placeholder endpoints in this release.
+The API reference at `/docs` is a responsive white/lime portal generated from `/openapi.json`; Swagger remains available at `/swagger`. Invitations, patient self-service, public TV credentials, visit-stage transfers, realtime fanout delivery and analytics remain the later stages identified below, not exposed as placeholder endpoints in this release.
+
+### Implemented public frontend slice (2026-09-29)
+
+The Next.js frontend provides a Sinhala-first public landing page, English language selection, registration, login, recovery request/reset, and an authenticated account/profile screen. The queue illustration is explicitly a sample; no clinical data or queue mutations are held in browser state. Role-specific workspaces remain planned.
+
+Browser forms call same-origin `/api/auth/*` route handlers. Those handlers call the existing `/v1/auth/*` backend facade, validate the request Origin and runtime contracts, and store access/refresh tokens in HttpOnly, SameSite=Lax cookies (Secure in production). Profile reads refresh expired access tokens; sign-out clears browser cookies and attempts backend session revocation. Supabase email recovery fragments are exchanged server-side and cleared from the address bar. Backend authorization remains authoritative. UI text comes from checked-in Sinhala/English dictionaries; fonts and brand assets are local. Deployment and staging-auth checks are documented in `frontend/README.md`.
+
+Google OAuth starts through an origin-checked frontend POST, stores a short-lived HttpOnly PKCE verifier, and exchanges the callback code directly with the same Supabase Auth project's versioned API. It reuses the existing session cookies and backend profile/membership authorization. No Google API tokens are exposed or stored. The backend preserves authentication 429 statuses and forwards allowlisted rate-limit error codes and numeric Retry-After metadata; the frontend applies a retry cooldown without changing provider quotas or email verification requirements.
 
 ## 1. Architectural decisions
 
