@@ -1,0 +1,29 @@
+# Auto-provisioned by resume-core's discover-projects workflow.
+# Notifies ChamathDilshanC/resume-core whenever this repo's default
+# branch is pushed to. Add the "resume-ready" topic (Settings -> topic tags)
+# once this project is actually presentable — pushes are ignored until then.
+#
+# Required secret in THIS repo: RESUME_CORE_PAT (fine-grained PAT scoped to
+# trigger repository_dispatch on ChamathDilshanC/resume-core).
+
+name: Notify Resume Pipeline
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch resume_update event to resume-core
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.RESUME_CORE_PAT }}
+          repository: ChamathDilshanC/resume-core
+          event-type: resume_update
+          client-payload: |-
+            {
+              "repo_owner": "${{ github.repository_owner }}",
+              "repo_name": "${{ github.event.repository.name }}"
+            }
