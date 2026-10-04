@@ -249,3 +249,20 @@ creation is covered by integration tests, while PostgreSQL concurrency requires 
 separate database test configuration. Inventory is manual stock tracking and billing
 is cumulative manual payment recording; automated stock dispensing, payment gateway,
 insurance, payroll and device/PACS integrations remain outside this implementation.
+
+### Ward occupancy and stay dates
+
+`GET /v1/wards/{ward_id}/bed-map` is restricted to staff within the selected branch.
+It returns all ward beds, current admissions or explicitly labelled last stays,
+patient name/MRN, admission and bed allocation dates, planned/actual discharge and
+occupancy/discharge summaries. Active admissions determine occupied status. Stay
+and bed days count inclusive calendar dates in the branch timezone; completed stays
+stop counting at discharge. Patient overview exposes only owned patients' ward stays.
+
+Revision `0007_ward_stay_dates` adds the planned discharge and bed allocation columns,
+backfilling existing bed allocations from admission dates. Deploy migrations through
+0007 before releasing this API. The existing PostgreSQL startup compatibility path
+also creates missing management/patient-account tables and ward date columns; this
+does not replace the tracked migration. Database failures return sanitized JSON 503
+responses and the frontend proxy normalizes upstream errors. The visual staff board
+polls every 30 seconds and supports ward selection, bed status filters and search.

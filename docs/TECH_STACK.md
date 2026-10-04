@@ -70,3 +70,14 @@ invoice balances. Next.js patient routes reuse Supabase identity and HttpOnly
 sessions; the proxy checks mutation Origins and forwards queue idempotency keys.
 No additional dependencies, identity provider, browser database writes or services
 were introduced. Queue polling is implemented; realtime fanout remains a target.
+
+## Ward bed board
+
+The Next.js staff dashboard includes a responsive visual bed board with Sinhala and
+English labels, status colors, searchable patient/bed information and stay details.
+FastAPI owns timezone-aware date/day calculations and enforces branch access;
+patient self-service shows only owned stays. PostgreSQL migration 0007 adds nullable
+planned discharge and bed allocation timestamps. API/proxy error responses avoid
+raw server diagnostics. Browser tests cover bed filtering, mobile sizing, date
+details, completed stays and patient error recovery; backend tests cover ownership,
+branch isolation and calendar-day/discharge behavior.
