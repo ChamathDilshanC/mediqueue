@@ -58,3 +58,15 @@ The three child repos are Git submodules in the main repo. Main CI checks the ex
 ## Hosting checklist
 
 Deploy the FastAPI API to Vercel using its Python serverless-function deployment model and configure the build to initialize the pinned `configuration/` submodule. Run notification/outbox processing as a separate managed worker or scheduled job because Vercel functions are request-oriented and are not a durable worker host. Keep development, staging and production Supabase projects separate, configure secrets through Vercel environment variables, and add health checks, logs and alerts before a live hospital rollout.
+
+## Implemented hospital management extension (2026-10-04)
+
+The existing stack also serves patient self-service and role-aware management.
+Pydantic validates module-specific clinical, prescription, lab, invoice, inventory
+and staff contracts. SQLAlchemy persists scoped JSON payloads with optimistic
+versions and explicit identity-to-patient ownership links; Alembic revision
+`0006_management` owns their upgrade. FastAPI computes aggregate reports and Decimal
+invoice balances. Next.js patient routes reuse Supabase identity and HttpOnly
+sessions; the proxy checks mutation Origins and forwards queue idempotency keys.
+No additional dependencies, identity provider, browser database writes or services
+were introduced. Queue polling is implemented; realtime fanout remains a target.

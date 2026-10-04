@@ -13,11 +13,11 @@ Implemented entities: hospitals (the existing `iam.tenant`), branches, Supabase-
 
 Setup entities have typed, scoped CRUD. Hospitals/branches have onboarding/read/update operations; membership revocation is explicit. Appointment cancellation and immutable visit/audit history preserve records rather than exposing blanket deletion. Patient references are shared within a hospital; other operational resources are branch-scoped. Outbox and idempotency storage remain internal. Schedule overlap and appointment capacity are checked under branch/schedule locks. Queue commands use actor/branch/operation-bound idempotency, row locks, audit and outbox records. The local SQLite adapter persists schema sidecars but is not a concurrency substitute for PostgreSQL.
 
-The API reference at `/docs` is a responsive white/lime portal generated from `/openapi.json`; Swagger remains available at `/swagger`. Invitations, patient self-service, public TV credentials, visit-stage transfers, realtime fanout delivery and analytics remain the later stages identified below, not exposed as placeholder endpoints in this release.
+The API reference at `/docs` is a responsive white/lime portal generated from `/openapi.json`; Swagger remains available at `/swagger`. Patient self-service and aggregate reporting are now implemented in the management extension described below. Invitations, public TV credentials, visit-stage transfers and realtime fanout delivery remain deferred.
 
 ### Implemented public frontend slice (2026-09-29)
 
-The Next.js frontend provides a Sinhala-first public landing page, English language selection, registration, login, recovery request/reset, and an authenticated account/profile screen. The queue illustration is explicitly a sample; no clinical data or queue mutations are held in browser state. Role-specific workspaces remain planned.
+The Next.js frontend provides a Sinhala-first public landing page, English language selection, registration, login, recovery request/reset, and an authenticated account/profile screen. The queue illustration is explicitly a sample; no clinical data or queue mutations are held in browser state. Role-aware workspaces and patient self-service are implemented in the management extension described below.
 
 Browser forms call same-origin `/api/auth/*` route handlers. Those handlers call the existing `/v1/auth/*` backend facade, validate the request Origin and runtime contracts, and store access/refresh tokens in HttpOnly, SameSite=Lax cookies (Secure in production). Profile reads refresh expired access tokens; sign-out clears browser cookies and attempts backend session revocation. Supabase email recovery fragments are exchanged server-side and cleared from the address bar. Backend authorization remains authoritative. UI text comes from checked-in Sinhala/English dictionaries; fonts and brand assets are local. Deployment and staging-auth checks are documented in `frontend/README.md`.
 
@@ -222,3 +222,30 @@ CI gates: lint/typecheck/unit tests per repo; migration and concurrency tests fo
 - Supabase Realtime Broadcast: https://supabase.com/docs/guides/realtime/broadcast
 - Supabase Realtime authorization: https://supabase.com/docs/guides/realtime/authorization
 - FastAPI deployment: https://fastapi.tiangolo.com/deployment/
+
+### Hospital management and patient ownership (2026-10-04)
+
+The modular FastAPI deployment now includes management and patient self-service
+routers. `scheduling.management_record` stores strictly typed module payloads with
+branch/tenant indexes, patient references, optimistic versions and timestamps.
+Modules cover clinical notes/vitals, prescriptions, laboratory requests/results,
+invoices, inventory and staff contacts/shifts. The API validates per-module models,
+role access, references and status transitions before committing an audit entry.
+Final clinical/lab records are immutable and accounting balances use Decimal.
+
+`iam.patient_account` maps a verified Supabase user to one patient profile per tenant.
+Patient APIs do not depend on staff memberships. Enrollment creates a new owned
+profile; appointment commands reuse existing locked capacity/state logic only after
+ownership verification. Profile/email matching never grants access to existing
+medical records. The portal exposes signed clinical notes and released lab results;
+other patients' records are excluded at query/ownership boundaries.
+
+The frontend has patient routes and role-aware staff management, branch selection,
+queue/appointment workflow controls and aggregate reports. All mutations use an
+Origin-checked server proxy; queue idempotency headers are forwarded. Queue views
+poll authoritative snapshots every 15 seconds. Realtime delivery remains deferred.
+Revision `0006_management` must deploy before the new routes; local SQLite metadata
+creation is covered by integration tests, while PostgreSQL concurrency requires its
+separate database test configuration. Inventory is manual stock tracking and billing
+is cumulative manual payment recording; automated stock dispensing, payment gateway,
+insurance, payroll and device/PACS integrations remain outside this implementation.
