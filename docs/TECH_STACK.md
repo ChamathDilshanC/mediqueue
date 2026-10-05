@@ -81,3 +81,12 @@ planned discharge and bed allocation timestamps. API/proxy error responses avoid
 raw server diagnostics. Browser tests cover bed filtering, mobile sizing, date
 details, completed stays and patient error recovery; backend tests cover ownership,
 branch isolation and calendar-day/discharge behavior.
+
+## Dedicated patient care space
+
+Next.js provides a separate responsive patient shell, mobile section navigation,
+light/dark themes and Sinhala/English labels. FastAPI exposes owned queue tickets
+and registration check-in; existing transactional token commands power staff calls
+and audited same-visit handoffs. Migration 0008 adds queue stage and room bindings.
+Staff configure queues and rooms before patients can take registration tickets.
+Patient queue updates poll every 15 seconds. PostgreSQL remains authoritative.

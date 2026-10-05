@@ -266,3 +266,24 @@ also creates missing management/patient-account tables and ward date columns; th
 does not replace the tracked migration. Database failures return sanitized JSON 503
 responses and the frontend proxy normalizes upstream errors. The visual staff board
 polls every 30 seconds and supports ward selection, bed status filters and search.
+
+### Patient care space and sequential queue journey
+
+Patients use a dedicated `/patient` shell containing only owned appointments,
+tickets, health records and ward stays. Accounts without active staff memberships
+redirect from `/account` to this space; the staff sidebar is excluded. Queue state
+polls every 15 seconds. `GET /v1/patient/tickets` joins identity ownership through
+patient/visit records, returning only owned tickets plus non-identifying serving
+numbers, people ahead and assigned room/counter. Patients may take registration
+tickets after enrollment; they cannot choose another patient or a clinical queue.
+Commands require idempotency keys and branch serialization prevents duplicate
+active tickets. No waiting-time estimate is invented.
+
+Revision `0008_patient_flow` adds queue service types and room bindings. Existing
+queues remain GENERAL; staff configure REGISTRATION, CONSULTATION (requires room)
+and DISPENSARY queues. Reception operates registration queues. Staff complete the
+current station, then `/v1/journey/tokens/{id}/handoff` issues an onward ticket with
+the same visit. Scope/role/state checks, branch and row locks, idempotency replay
+and an audited handoff prevent duplicate onward tickets. Consultation may hand
+off to another doctor or dispensary. Queue commands and the patient display read
+the same authoritative token state. Apply migrations through 0008 before release.
