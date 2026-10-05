@@ -277,7 +277,7 @@ patient/visit records, returning only owned tickets plus non-identifying serving
 numbers, people ahead and assigned room/counter. Patients may take registration
 tickets after enrollment; they cannot choose another patient or a clinical queue.
 Commands require idempotency keys and branch serialization prevents duplicate
-active tickets. No waiting-time estimate is invented.
+active tickets. Queue estimates are explicitly approximate and calculated on the backend.
 
 Revision `0008_patient_flow` adds queue service types and room bindings. Existing
 queues remain GENERAL; staff configure REGISTRATION, CONSULTATION (requires room)
@@ -287,3 +287,33 @@ the same visit. Scope/role/state checks, branch and row locks, idempotency repla
 and an audited handoff prevent duplicate onward tickets. Consultation may hand
 off to another doctor or dispensary. Queue commands and the patient display read
 the same authoritative token state. Apply migrations through 0008 before release.
+
+### Hospital discovery, self booking and live estimates
+
+Revision `0009_patient_discovery` adds public address/contact details and nullable
+latitude/longitude to hospital branches, plus each queue's configured average
+service duration. Apply it before releasing the patient discovery API. Existing
+branches remain visible in the directory; only branches with valid coordinates
+appear as map pins. Branch location updates require that hospital's active admin
+membership. Coordinates are validated as a pair and bounded to valid ranges.
+
+Authenticated patients discover all registered branches through `/v1/patient/centers`.
+The browser uses Leaflet with OpenStreetMap tiles, visible attribution and normal
+browser caching. Optional geolocation is requested only from a user action and
+remains in client memory. Nearest sorting uses straight-line distance; directions
+open Google Maps with the destination only. Map failures do not disable booking.
+Tile URL and attribution can be configured independently for another provider.
+
+Session discovery includes remaining capacity and whether the caller already
+booked. Enrollment and confirmation use the existing identity-owned transactional
+booking command; locked capacity and duplicate checks remain authoritative.
+Appointment summaries include branch name/address and branch timezone.
+
+`/v1/patient/queue-status/{branch_id}` returns only queue counts, serving token
+numbers and approximate wait times, with no patient identities. It uses today's
+queue business date. Estimates use the median of at least three actual recent
+start-to-completion durations (last seven days); otherwise they use the configured
+average, explicitly labelled. The model assumes sequential service at each queue
+and includes currently called/in-service patients. Owned ticket estimates use
+people ahead, rather than the whole queue. UI polling runs every 15 seconds;
+estimates can change with urgent care, staffing and service delays.

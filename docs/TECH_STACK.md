@@ -10,6 +10,7 @@ The current implemented API is a modular FastAPI deployment with identity, sched
 | --- | --- | --- |
 | Web | Next.js, React, TypeScript | Admin, reception, doctor, patient, TV and kiosk interfaces |
 | UI | Tailwind CSS, shadcn/ui, Lucide | Accessible components and consistent design tokens |
+| Hospital maps | Leaflet + OpenStreetMap raster tiles | Registered branch pins, browser geolocation and nearest sorting; configurable tile provider |
 | API state | TanStack Query | Fetch, cache and invalidate server data |
 | Local UI state | Zustand | Small client-only state; never authoritative queue state |
 | Forms | React Hook Form + Zod | Form state and typed validation |
