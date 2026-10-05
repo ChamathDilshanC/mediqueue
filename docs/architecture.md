@@ -317,3 +317,25 @@ average, explicitly labelled. The model assumes sequential service at each queue
 and includes currently called/in-service patients. Owned ticket estimates use
 people ahead, rather than the whole queue. UI polling runs every 15 seconds;
 estimates can change with urgent care, staffing and service delays.
+
+
+### Patient appointment review and attendance
+
+Apply migration `0010_appointment_review` before deploying the appointment inbox.
+Existing and staff-created appointments retain `BOOKED` (displayed as Approved).
+Patient self bookings enter `PENDING` and reserve session capacity transactionally.
+Staff, reception and admins in the active branch can approve (`BOOKED`) or reject
+with a required reason; the backend stores reviewer, review time and an audit event.
+Patients can cancel their own pending or approved bookings. Rejected/cancelled
+requests release capacity; rejected history remains visible and permits rebooking.
+Approval of ended sessions is rejected. Branch locks serialize competing decisions.
+Approved appointments can be marked arrived (`CHECKED_IN`), absent (`NO_SHOW`) or
+cancelled; arrived appointments can become `COMPLETED`. Terminal states cannot be
+reopened. Doctors have read access to the inbox but no review mutations.
+
+`/v1/appointment-inbox` returns a branch-scoped, paginated history with patient,
+doctor, room, session time, review details and status counts. Status and name/reference
+search run on the backend, so results include records beyond the first page. Both
+staff and patient views refresh every 15 seconds. No notification email is sent.
+Before rolling back to a version without pending/rejected states, resolve pending
+requests and retain review history; dropping review columns loses decision metadata.
