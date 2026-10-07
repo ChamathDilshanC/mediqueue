@@ -5,7 +5,7 @@
 name: mediqueue
 
 x-backend: &backend
-  image: ghcr.io/chamathdilshanc/mediqueue-backend:${MEDIQUEUE_VERSION:-1.2.0}
+  image: ghcr.io/chamathdilshanc/mediqueue-backend:${MEDIQUEUE_VERSION:-1.3.0}
   env_file: .env
 
 services:
@@ -21,7 +21,7 @@ services:
     profiles: ["migrate"]
 
   frontend:
-    image: ghcr.io/chamathdilshanc/mediqueue-frontend:${MEDIQUEUE_VERSION:-1.2.0}
+    image: ghcr.io/chamathdilshanc/mediqueue-frontend:${MEDIQUEUE_VERSION:-1.3.0}
     environment:
       MEDIQUEUE_API_URL: http://backend:8000
       APP_ORIGIN: ${APP_ORIGIN:-http://localhost:3000}
