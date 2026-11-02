@@ -19,6 +19,21 @@ child repositories.
 | `Frontend` | [Live Frontend](https://mediqueue-frontend-theta.vercel.app/) |
 | `Backend` | [Live Backend](https://mediqueue-backend-eta.vercel.app/docs) |
 
+## Demo
+
+[![Watch the MediQueue product walkthrough (24 minutes)](media/demo-thumbnail.png)](https://github.com/ChamathDilshanC/mediqueue/releases/tag/demo-video)
+
+A 24-minute walkthrough of the live app. A staff member registers a hospital
+and a system administrator approves it in `/admin`. Staff then set up
+departments, wards, beds, doctors, schedules, patients and queues. Finally, a
+patient finds the hospital, takes a queue ticket and books a doctor session.
+The full-quality video is on the
+[demo release](https://github.com/ChamathDilshanC/mediqueue/releases/tag/demo-video).
+
+| Landing page | Staff and administrator sign-in |
+| --- | --- |
+| ![MediQueue landing page in Sinhala](media/landing-page.png) | ![Staff and administrator sign-in page](media/staff-sign-in.png) |
+
 ## Platform at a glance
 
 | Surface | Responsibility | Status |
@@ -76,6 +91,7 @@ MediQueue/
 ├── frontend/         # Next.js public website and authentication submodule
 ├── docs/             # Architecture and technology decisions
 ├── assets/            # Shared brand assets
+├── media/             # README screenshots and demo thumbnail
 └── .github/           # Integration CI
 ```
 
