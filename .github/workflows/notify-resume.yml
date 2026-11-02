@@ -15,8 +15,13 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    env:
+      # Secrets cannot be read in an `if`, so expose whether the PAT is set.
+      HAS_RESUME_CORE_PAT: ${{ secrets.RESUME_CORE_PAT != '' }}
     steps:
+      # Skip instead of failing until RESUME_CORE_PAT is added to this repo.
       - name: Dispatch resume_update event to resume-core
+        if: env.HAS_RESUME_CORE_PAT == 'true'
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.RESUME_CORE_PAT }}
