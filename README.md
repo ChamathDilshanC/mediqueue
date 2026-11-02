@@ -23,6 +23,8 @@ child repositories.
 
 [![Watch the MediQueue product walkthrough (24 minutes)](media/demo-thumbnail.png)](https://github.com/ChamathDilshanC/mediqueue/releases/tag/demo-video)
 
+[![Drive video](https://img.shields.io/badge/Drive%20video-Watch%20on%20Google%20Drive-4285F4?logo=googledrive&logoColor=white)](https://drive.google.com/file/d/1RayjZjhFYh75bER7iTnda35_isZ28jwG/view?usp=sharing)
+
 A 24-minute walkthrough of the live app. A staff member registers a hospital
 and a system administrator approves it in `/admin`. Staff then set up
 departments, wards, beds, doctors, schedules, patients and queues. Finally, a
